@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lazada 11.11 NMV Optimizer — live</title>
+<meta name="description" content="Interactive brand-side NMV simulator for Lazada mega-sale campaigns. Adjust budget and funnel assumptions, see projected GMV, NMV and ROI instantly." />
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#262b34;
+    --text:#e8eaed; --muted:#9aa3af; --accent:#ff5a1f; --good:#34d399;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px}
+  header{padding:64px 0 28px}
+  .back{color:var(--muted);text-decoration:none;font-size:14px}
+  .back:hover{color:var(--accent)}
+  .eyebrow{color:var(--accent);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px;margin:18px 0 10px}
+  h1{font-size:clamp(28px,5vw,42px);line-height:1.1;font-weight:800;letter-spacing:-.02em}
+  .lede{color:var(--muted);margin-top:14px;max-width:62ch}
+  .app{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:34px 0 16px}
+  @media(max-width:720px){.app{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:20px;font-weight:600}
+  .field{margin-bottom:18px}
+  .field label{display:flex;justify-content:space-between;font-size:14px;margin-bottom:7px}
+  .field label span:last-child{color:var(--accent);font-weight:600}
+  .field input[type=range]{width:100%;accent-color:var(--accent);height:4px}
+  .field .num{width:100%;margin-top:8px;background:#0c0e12;border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:8px 10px;font-size:14px;font-variant-numeric:tabular-nums}
+  .field .num:focus{outline:none;border-color:var(--accent)}
+  .results .row{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line)}
+  .results .row:last-child{border-bottom:none}
+  .results .row .k{color:var(--muted);font-size:14px}
+  .results .row .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+  .results .hero{padding:18px;background:#0c0e12;border-radius:10px;margin-bottom:14px;text-align:center}
+  .results .hero .k{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+  .results .hero .v{font-size:clamp(30px,6vw,44px);font-weight:800;color:var(--accent);display:block;margin-top:6px;font-variant-numeric:tabular-nums}
+  .roi{color:var(--good)}
+  .note{color:var(--muted);font-size:13px;margin-top:18px;max-width:70ch}
+  .src{margin-top:10px;font-size:14px}
+  .src a{color:var(--text)}
+  footer{padding:36px 0 70px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back" href="../">← Back to portfolio</a>
+    <div class="eyebrow">Live simulation · Pachara Don Stewart</div>
+    <h1>Lazada 11.11 NMV Optimizer</h1>
+    <p class="lede">Brand-side model for mega-sale campaigns. Set your budget and funnel assumptions — projected GMV, net merchandise value and ROI update instantly. The 2026 model applies a 1.2× peak-hour conversion lift.</p>
+  </header>
+
+  <div class="app">
+    <div class="card">
+      <h2>Campaign parameters</h2>
+
+      <div class="field">
+        <label for="budget"><span>Marketing budget (THB)</span><span id="budget_l"></span></label>
+        <input type="range" id="budget" min="50000" max="3000000" step="10000" value="500000" />
+        <input type="number" class="num" id="budget_n" value="500000" />
+      </div>
+
+      <div class="field">
+        <label for="cpc"><span>Avg. cost per click (THB)</span><span id="cpc_l"></span></label>
+        <input type="range" id="cpc" min="1" max="30" step="0.1" value="4.5" />
+        <input type="number" class="num" id="cpc_n" value="4.5" step="0.1" />
+      </div>
+
+      <div class="field">
+        <label for="cr"><span>Baseline conversion rate</span><span id="cr_l"></span></label>
+        <input type="range" id="cr" min="0.5" max="15" step="0.1" value="3.5" />
+        <input type="number" class="num" id="cr_n" value="3.5" step="0.1" />
+      </div>
+
+      <div class="field">
+        <label for="aov"><span>Average order value (THB)</span><span id="aov_l"></span></label>
+        <input type="range" id="aov" min="200" max="10000" step="50" value="1200" />
+        <input type="number" class="num" id="aov_n" value="1200" />
+      </div>
+
+      <div class="field">
+        <label for="ret"><span>Returns / cancellations</span><span id="ret_l"></span></label>
+        <input type="range" id="ret" min="0" max="40" step="0.5" value="8" />
+        <input type="number" class="num" id="ret_n" value="8" step="0.5" />
+      </div>
+    </div>
+
+    <div class="card results">
+      <h2>Projected results</h2>
+      <div class="hero">
+        <span class="k">Projected NMV</span>
+        <span class="v" id="r_nmv">—</span>
+      </div>
+      <div class="row"><span class="k">Projected traffic</span><span class="v" id="r_traffic">—</span></div>
+      <div class="row"><span class="k">Total orders</span><span class="v" id="r_orders">—</span></div>
+      <div class="row"><span class="k">Optimized CR (×1.2)</span><span class="v" id="r_ocr">—</span></div>
+      <div class="row"><span class="k">Estimated GMV</span><span class="v" id="r_gmv">—</span></div>
+      <div class="row"><span class="k">ROI</span><span class="v roi" id="r_roi">—</span></div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Formula:</strong> NMV = (Budget ÷ CPC) × (CR × 1.2) × AOV − returns. A planning simulation — outputs are projections from your inputs, not guarantees.</p>
+  <p class="src">Source code: <a href="https://github.com/pacharadon/lazada-nmv-optimizer">github.com/pacharadon/lazada-nmv-optimizer</a></p>
+
+  <footer>Pachara Don Stewart · runs entirely in your browser · <a href="https://pacharadon.github.io/" style="color:var(--text)">pacharadon.github.io</a></footer>
+</div>
+
+<script>
+  const ids = ["budget","cpc","cr","aov","ret"];
+  const baht = n => "฿" + Math.round(n).toLocaleString("en-US");
+  const intl = n => Math.round(n).toLocaleString("en-US");
+
+  function sync(id, from){
+    const r = document.getElementById(id), n = document.getElementById(id+"_n");
+    if(from === "range") n.value = r.value; else r.value = n.value;
+    calc();
+  }
+  ids.forEach(id=>{
+    document.getElementById(id).addEventListener("input", ()=>sync(id,"range"));
+    document.getElementById(id+"_n").addEventListener("input", ()=>sync(id,"number"));
+  });
+
+  function calc(){
+    const budget = +document.getElementById("budget_n").value || 0;
+    const cpc    = +document.getElementById("cpc_n").value || 0;
+    const crPct  = +document.getElementById("cr_n").value || 0;
+    const aov    = +document.getElementById("aov_n").value || 0;
+    const retPct = +document.getElementById("ret_n").value || 0;
+
+    document.getElementById("budget_l").textContent = baht(budget);
+    document.getElementById("cpc_l").textContent = "฿"+cpc.toFixed(1);
+    document.getElementById("cr_l").textContent = crPct.toFixed(1)+"%";
+    document.getElementById("aov_l").textContent = baht(aov);
+    document.getElementById("ret_l").textContent = retPct.toFixed(1)+"%";
+
+    const traffic = cpc>0 ? budget/cpc : 0;
+    const ocr = (crPct/100)*1.2;
+    const orders = traffic*ocr;
+    const gmv = orders*aov;
+    const nmv = gmv*(1-retPct/100);
+    const roi = budget>0 ? nmv/budget : 0;
+
+    document.getElementById("r_traffic").textContent = intl(traffic);
+    document.getElementById("r_orders").textContent  = intl(orders);
+    document.getElementById("r_ocr").textContent     = (ocr*100).toFixed(2)+"%";
+    document.getElementById("r_gmv").textContent     = baht(gmv);
+    document.getElementById("r_nmv").textContent     = baht(nmv);
+    document.getElementById("r_roi").textContent     = roi.toFixed(2)+"×";
+  }
+  calc();
+</script>
+</body>
+</html>
