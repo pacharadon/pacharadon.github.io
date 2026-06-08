@@ -4,46 +4,47 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Pachara Don Stewart — Projects</title>
-<meta name="description" content="Selected projects by Pachara Don Stewart: business modeling, data analysis, and shipped web products." />
+<meta name="description" content="Pachara Don Stewart — application, business modeling, data analysis, and shipped web products." />
 <style>
   :root{
-    --bg:#08090c; --sheet:#11141a; --panel:#171b22; --line:#2a303a;
-    --text:#e8eaed; --muted:#9aa3af; --accent:#ff5a1f;
+    --bg:#e9efe9; --sheet:#ffffff; --panel:#f7f4ec; --line:#e3eae4;
+    --ink:#1e2530; --muted:#5d6a66; --accent:#1f9e78; --accent-ink:#15734f; --accent-soft:#e9f7f0;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{
-    background:radial-gradient(120% 120% at 50% 0%,#12141a,#08090c 70%);
-    color:var(--text);
+    background:linear-gradient(180deg,#eff4ef,#e5eee7);
+    color:var(--ink);
     font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
     height:100vh;overflow:hidden;
     display:flex;align-items:center;justify-content:center;padding:18px;
   }
 
-  /* A4 portrait sheet (210 × 297) — fits the screen, no scroll */
   .sheet{
     aspect-ratio:210/297;
     height:min(96vh,1000px);
     max-width:96vw;
     background:var(--sheet);
     border:1px solid var(--line);
-    border-radius:10px;
-    box-shadow:0 30px 80px rgba(0,0,0,.6);
+    border-radius:12px;
+    box-shadow:0 24px 60px rgba(31,75,58,.14);
     container-type:size;
     display:flex;flex-direction:column;
     padding:7cqw 7cqw 5cqw;
-    overflow:hidden;
-    position:relative;
+    overflow:hidden;position:relative;
   }
-  .sheet::before{content:"";position:absolute;top:0;left:0;right:0;height:1.4cqw;background:var(--accent)}
+  .sheet::before{content:"";position:absolute;top:0;left:0;right:0;height:1.4cqw;background:linear-gradient(90deg,var(--accent),#5ec9a3)}
 
-  .eyebrow{color:var(--accent);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:2.4cqw;margin-bottom:2.4cqw}
+  .eyebrow{color:var(--accent-ink);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:2.4cqw;margin-bottom:2.2cqw}
   h1{font-size:8cqw;line-height:1;font-weight:800;letter-spacing:-.02em}
   .lede{color:var(--muted);font-size:3.1cqw;margin-top:2.4cqw;max-width:34ch;line-height:1.4}
-  .toplink{margin-top:3cqw}
-  .toplink a{color:var(--text);text-decoration:none;border:1px solid var(--line);padding:1.6cqw 3.4cqw;border-radius:999px;font-size:2.7cqw;font-weight:600;display:inline-block;transition:.15s}
-  .toplink a:hover{border-color:var(--accent);color:var(--accent)}
+  .toplink{margin-top:3cqw;display:flex;gap:1.8cqw;flex-wrap:wrap}
+  .toplink a{text-decoration:none;padding:1.6cqw 3.4cqw;border-radius:999px;font-size:2.7cqw;font-weight:700;display:inline-block;transition:.15s}
+  .toplink a.primary{background:var(--accent);color:#fff}
+  .toplink a.primary:hover{filter:brightness(1.07)}
+  .toplink a.ghost{color:var(--ink);border:1px solid var(--line);background:#fff}
+  .toplink a.ghost:hover{border-color:var(--accent);color:var(--accent-ink)}
 
   .rule{height:1px;background:var(--line);margin:3.6cqw 0 3cqw}
   .label{font-size:2.4cqw;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin-bottom:2.6cqw}
@@ -54,27 +55,26 @@
     padding:3.8cqw;text-decoration:none;color:inherit;
     display:flex;flex-direction:column;transition:.15s;position:relative;overflow:hidden;min-height:0;
   }
-  .card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 100% 0%,rgba(255,90,31,.12),transparent 60%);opacity:0;transition:.2s}
+  .card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 100% 0%,rgba(31,158,120,.10),transparent 60%);opacity:0;transition:.2s}
   .card:hover{border-color:var(--accent);transform:translateY(-2px)}
   .card:hover::after{opacity:1}
-  .card .tag{font-size:2.3cqw;color:var(--accent);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+  .card .tag{font-size:2.3cqw;color:var(--accent-ink);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
   .card h3{font-size:4.6cqw;font-weight:800;letter-spacing:-.02em;margin-top:1.6cqw;line-height:1.05}
   .card p{color:var(--muted);margin-top:1.8cqw;font-size:2.7cqw;line-height:1.4}
   .card .stack{margin-top:auto;padding-top:2.2cqw;display:flex;gap:1.6cqw;flex-wrap:wrap}
-  .card .stack span{font-size:2.1cqw;color:var(--muted);border:1px solid var(--line);border-radius:1.4cqw;padding:1cqw 2.2cqw}
-  .card .cta{margin-top:2cqw;color:var(--accent);font-weight:700;font-size:2.9cqw}
+  .card .stack span{font-size:2.1cqw;color:var(--muted);border:1px solid var(--line);background:#fff;border-radius:1.4cqw;padding:1cqw 2.2cqw}
+  .card .cta{margin-top:2cqw;color:var(--accent-ink);font-weight:700;font-size:2.9cqw}
 
   .foot{margin-top:3cqw;color:var(--muted);font-size:2.3cqw}
-  .foot a{color:var(--text)}
+  .foot a{color:var(--accent-ink)}
 
-  /* very narrow screens: let the sheet grow and the page scroll rather than crush text */
   @media(max-width:480px){
     body{overflow:auto;align-items:flex-start}
     .sheet{height:auto;aspect-ratio:auto;min-height:96vh}
   }
-  /* print / save-as-PDF on real A4 */
   @media print{
     @page{size:A4;margin:0}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     body{height:auto;overflow:visible;background:#fff;padding:0}
     .sheet{height:297mm;width:210mm;max-width:none;border:none;border-radius:0;box-shadow:none}
   }
@@ -86,7 +86,10 @@
     <div class="eyebrow">Portfolio</div>
     <h1>Pachara Don Stewart</h1>
     <p class="lede">I turn messy business questions into working software — revenue models, data tools, shipped web products.</p>
-    <div class="toplink"><a href="https://github.com/pacharadon">GitHub →</a></div>
+    <div class="toplink">
+      <a class="primary" href="./application/">📄 Read my application →</a>
+      <a class="ghost" href="https://github.com/pacharadon">GitHub</a>
+    </div>
 
     <div class="rule"></div>
     <div class="label">Selected projects</div>

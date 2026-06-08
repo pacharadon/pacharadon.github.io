@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pachara Don Stewart — Application</title>
+<meta name="description" content="Pachara Don Stewart — application: 8 questions, examples, and market analysis." />
+<style>
+  :root{
+    --bg:#e9efe9; --paper:#ffffff; --ink:#1e2530; --muted:#5d6a66;
+    --line:#e3eae4; --accent:#1f9e78; --accent-ink:#15734f; --accent-soft:#e9f7f0;
+    --warm:#f7f4ec;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:linear-gradient(180deg,#eef3ee,#e6efe8);
+    color:var(--ink);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:34px 18px 80px;
+  }
+  .topbar{max-width:880px;margin:0 auto 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .back{color:var(--accent-ink);text-decoration:none;font-size:14px;font-weight:600}
+  .back:hover{text-decoration:underline}
+  .printbtn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer}
+  .printbtn:hover{filter:brightness(1.06)}
+
+  .paper{
+    max-width:880px;margin:0 auto;background:var(--paper);
+    border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 24px 60px rgba(31,75,58,.12);
+    padding:60px 64px 56px;position:relative;overflow:hidden;
+  }
+  .paper::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,var(--accent),#5ec9a3)}
+  @media(max-width:640px){.paper{padding:40px 26px}}
+
+  .name{font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+  .role{color:var(--accent-ink);font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+  .contact{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;font-size:14px}
+  .contact a,.contact span{color:var(--ink);text-decoration:none;border:1px solid var(--line);background:var(--warm);border-radius:999px;padding:6px 14px;font-weight:600}
+  .contact a:hover{border-color:var(--accent);color:var(--accent-ink)}
+
+  .intro{margin-top:22px;color:var(--ink)}
+  .intro p{margin:12px 0}
+  .muted{color:var(--muted)}
+
+  .divider{height:1px;background:var(--line);margin:30px 0}
+
+  .q{margin:30px 0;padding:24px 26px;background:var(--warm);border:1px solid var(--line);border-radius:12px;border-left:4px solid var(--accent)}
+  .q .qnum{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;background:var(--accent);color:#fff;border-radius:8px;font-weight:800;font-size:15px;margin-right:10px}
+  .q .qtitle{font-weight:700;font-size:17px;color:var(--ink);display:flex;align-items:flex-start;gap:0}
+  .q .qtitle span{padding-top:3px}
+  .q .a{margin-top:14px}
+  .q .a p{margin:10px 0}
+  .sub{margin:8px 0 8px;padding-left:2px}
+  .sub b{color:var(--accent-ink)}
+
+  figure{margin:18px 0}
+  figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 22px rgba(31,75,58,.10)}
+
+  h2.section{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-ink);font-weight:800;margin:26px 0 6px}
+  h3.block{font-size:20px;font-weight:800;letter-spacing:-.01em;margin:18px 0 6px}
+  .analysis p{margin:12px 0}
+  .byline{color:var(--muted);font-size:14px;font-style:italic}
+  .thai{font-size:15px}
+
+  /* recent-work showcase (added under Q6 at Don's request) */
+  .work{margin-top:18px;background:var(--accent-soft);border:1px solid #cfeadd;border-radius:12px;padding:20px 22px}
+  .work h4{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-ink);font-weight:800;margin-bottom:4px}
+  .work .lead{color:var(--ink);font-size:14.5px;margin-bottom:14px}
+  .work .items{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.work .items{grid-template-columns:1fr}}
+  .work a.item{display:block;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:inherit;transition:.15s}
+  .work a.item:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .work a.item b{display:block;font-size:15px}
+  .work a.item small{color:var(--muted);font-size:12.5px}
+  .work a.item .go{color:var(--accent-ink);font-weight:700;font-size:13px;margin-top:8px;display:inline-block}
+
+  footer{max-width:880px;margin:18px auto 0;color:var(--muted);font-size:13px;text-align:center}
+
+  @media print{
+    @page{size:A4;margin:14mm}
+    body{background:#fff;padding:0}
+    .topbar,.printbtn,footer{display:none}
+    .paper{box-shadow:none;border:none;border-radius:0;max-width:none;padding:0}
+    .q,.work{break-inside:avoid}
+    figure{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a class="back" href="../">← Back to portfolio</a>
+    <button class="printbtn" onclick="window.print()">⤓ Save as PDF</button>
+  </div>
+
+  <main class="paper">
+
+    <div class="role">Application · Head of Second Space &amp; AARMY Thailand · Head of Absolute Pluz Premium Protein</div>
+    <div class="name">Pachara Don Stewart</div>
+
+    <div class="contact">
+      <a href="https://www.linkedin.com/in/dannypacharadon/">LinkedIn</a>
+      <span>CV: PacharaDonS_June26.pdf</span>
+      <a href="https://motherducker.tech/">Motherducker.tech</a>
+    </div>
+
+    <div class="intro">
+      <p>As a Head Position I dislike document formatting so I&rsquo;m going to send you two files. One AI does way better.</p>
+      <p>Pachara Don Stewart &mdash; before I answer you 8 questions, perhaps may I share why I&rsquo;m interested? I love what your company offers. I used to not take care of myself but now I go for jogs and lift weights. Taking care of your health is essential. You have a great product although red-ocean competitive market.</p>
+    </div>
+
+    <figure><img src="img/intro.png" alt="AARMY on-demand — 45 minute indoor cycling" /></figure>
+
+    <div class="q">
+      <div class="qtitle"><span class="qnum">1</span><span>Head of Second Space &amp; AARMY Thailand Only krub</span></div>
+      <div class="a">
+        <p>I lead teams yet my experiences from sales, team lead to Head of Accounts &mdash; I have become more programmatic / AI / self-learn SQL and Python &mdash; numpy, pandas, matplotlib.</p>
+        <p class="thai">ยิ่งบริหารทีม เริ่มต้องคิด strategy - how to fix the leak? how to overperform as a team? how to motivate team?</p>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qtitle"><span class="qnum">2</span><span>What experience makes you a strong fit for this position?</span></div>
+      <div class="a">
+        <p>I have led teams since 27 years old and beat the target ever since krub. (max team direct report &mdash; 30 people) I used to get 140K at foodpanda but after layoff 110&ndash;125 K up to culture and workload expected. 160K for double hat for both positioning.</p>
+        <p>I write to show you I use my brain before AI next? I&rsquo;m going to show you what I do with Claude &mdash; not ideas but research and reports. Then verify sources make sure my info is right.</p>
+        <p>By the way, CFA Level 1 krub and BBA Finance First in class so I love coding SQL and Python &mdash; pandas.</p>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qtitle"><span class="qnum">3</span><span>Please share one example where you helped grow a business, brand, channel, or customer base. Please include your role, key actions, and measurable results.</span></div>
+      <div class="a">
+        <div class="sub"><b>3.1</b> Head of Account Management &mdash; teach AM and Senior AM how to sell</div>
+        <div class="sub"><b>3.2</b> Revamp KPI + incentive to motivate team</div>
+        <div class="sub"><b>3.3</b> I doubled sales in less than 1 year &mdash; recruit the best junior professionals based on mindset and teach them the ropes</div>
+        <div class="sub"><b>3.4</b> Discipline the team / Campaign Roll Out &mdash; what I expect (using data to shortlist client leads make it easier for team)</div>
+        <div class="sub"><b>3.5</b> 1-1 product training</div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qtitle"><span class="qnum">4</span><span>Please share one example of a business problem you solved using data, research, customer insight, or market analysis.</span></div>
+      <div class="a">
+        <p>Let me answer using one example first. Foodpanda lost 50% of app visitors after Twitter drama. Yes we managed to get 90% better promotions than Grab and Lineman for our top 300 top money maker accounts.</p>
+        <div class="sub"><b>4.1</b> Foodpanda KPI as Team Lead Key Accounts</div>
+        <div class="sub"><b>4.2</b></div>
+        <div class="sub"><b>4.3</b></div>
+        <figure><img src="img/kpi-a.png" alt="Foodpanda Org KPI — AB December 2022" /></figure>
+        <figure><img src="img/kpi-b.png" alt="PandaPro deal data export" /></figure>
+        <div class="sub"><b>4.4</b> <a href="../nmv-optimizer/" style="color:var(--accent-ink);font-weight:700">Lazada Project &mdash; Marketing Analysis &mdash; Predictive Modeling Lazada TH Sales Growth Simulation &mdash; Top 30 FMCG</a></div>
+
+        <h2 class="section">Market Analysis &mdash; Use Freshket business model</h2>
+        <h3 class="block">WHARTON STRATEGIC MANAGEMENT</h3>
+        <p class="muted">Strategic Management Capstone &middot; Modules 1 &amp; 2</p>
+        <p class="thai muted">พอดีเรียนอยู่ครับเลยใช้ เป็น ตัวอย่าง</p>
+        <h3 class="block">Creating Connected Customer Relationships Assignment</h3>
+        <p class="byline">by Pachara Don Stewart</p>
+
+        <h3 class="block">Company Snapshot &amp; Funding</h3>
+        <p class="muted">Sources: revenue from DBD audited filings (FY2023&ndash;24) and company-reported FY2025; FY2026 is management&rsquo;s target; converted at approx. THB 34/</p>
+
+        <h3 class="block">About Freshket: Company and Market Background</h3>
+        <div class="analysis">
+          <p><b>What exactly is Freshket?</b></p>
+          <p>A Thai food-tech start-up (founded 2016; CEO and co-founder Ponglada &ldquo;Bell&rdquo; Paniangwet) that sells fresh groceries and ingredients through its own app to both everyday consumers (B2C) and restaurants (B2B). Its B2B business drives most of the revenue. It pivoted from a marketplace to a vertically integrated operator for about ten months in, because restaurants wanted one accountable counterparty rather than ten vendors. Today it runs direct sourcing (suppliers cut from approx. 100 to approx. 35), its own warehouse, logistics, and order-management systems, two distribution centers, approx. 10 Bangkok hubs, and a quality-control processing center; approx. 10,000 items across 22 categories; and approx. 26,000 restaurants at a reported approx. 99% service level. Its mission is to be the enabler for the whole food supply chain, replacing a chain of middlemen with one trusted, data-driven platform.</p>
+          <p><b>B2B vs the regular online groceries consumer:</b> Freshket has two kinds of customers. The first is businesses: restaurants, hotels, caf&eacute;s, caterers, and cloud kitchens, together called HORECA. The second is everyday shoppers on its consumer app. B2B is where the money is, about 85% of revenue, and it is the heart of the strategy. The consumer app is the other 15%; Freshket built it in just 24 hours during the 2020 lockdown, and it is a useful extra rather than the main business. Among the B2B customers, large chains are about 30% of accounts but the most valuable, so they are the ones to protect. Independent restaurants are about 70%; they pay less but keep delivery routes full. Manufacturers and cloud kitchens are a small but growing group. <b>Serviceable market:</b> The serviceable market is concentrated in Greater Bangkok plus affluent tourist cities (Phuket, Chiang Mai, and possibly Pattaya, Hua Hin, and Koh Samui). Rural demand is street food and self-sourcing, and a connected delivery model only pays at high route density, so a disciplined, density-first focus beats national expansion. Tier economics are illustrative estimates; revenue is from DBD audited filings (FY2023&ndash;24) and company-reported FY2025, with THB converted at roughly 34 per US dollar.</p>
+          <p><b>For US and international readers:</b> Freshket is closest to Cheetah (a US app-based food distributor that owns its warehousing and logistics) with the platform ambition of Choco (a US$1.2B B2B food-tech app). Its principal competitors map to familiar US formats: Makro and GO Wholesale are cash-and-carry wholesalers in the mold of Costco, Sam&rsquo;s Club, and Restaurant Depot, while the traditional alternative is the open-air wet market. Thai President Foods, maker of the popular MAMA instant noodle brand, is a strategic investor; PDPA is Thailand&rsquo;s data-protection law.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qtitle"><span class="qnum">5</span><span>First job &mdash; Headhunter &mdash; cold-call 50-100 potential candidates 13 years ago:</span></div>
+      <div class="a"><p><span class="thai">โดนด่ามาเยอะจนเก่ง สามารถสอนน้องได้</span> there are significant rewards to a sales job but strategy wise incentive structure must motivate them.</p></div>
+    </div>
+
+    <div class="q">
+      <div class="qtitle"><span class="qnum">6</span><span>How do you currently use AI or digital tools in your work?</span></div>
+      <div class="a">
+        <p>BRAIN first then AI. Think and fix AI errors krub. Examples? Plenty krub: check my own side-gig <a href="https://motherducker.tech/" style="color:var(--accent-ink);font-weight:700">Motherducker.tech</a> &ndash; check it out!</p>
+        <figure><img src="img/ai.png" alt="Motherducker.tech — one team, three service lines" /></figure>
+
+        <div class="work">
+          <h4>Recent work — built with AI, then verified</h4>
+          <p class="lead">Not ideas — shipped, live tools. Each one runs in the browser; I built them with Claude and checked the numbers and sources myself.</p>
+          <div class="items">
+            <a class="item" href="../nmv-optimizer/">
+              <b>Lazada 11.11 NMV Optimizer 2026</b>
+              <small>30-brand FMCG portfolio simulator — GMV/NMV, ROI, sensitivity matrix</small>
+              <span class="go">Open the live app →</span>
+            </a>
+            <a class="item" href="https://pacharadon.github.io/dannyneverquit/">
+              <b>SQL → pandas Drill</b>
+              <small>Self-graded practice app — pandas + matplotlib, 30 charts</small>
+              <span class="go">Open the live app →</span>
+            </a>
+            <a class="item" href="https://motherducker.tech/">
+              <b>Motherducker.tech</b>
+              <small>My side-gig — founder services site I run and write for</small>
+              <span class="go">Visit site →</span>
+            </a>
+            <a class="item" href="https://pacharadon.github.io/">
+              <b>This portfolio</b>
+              <small>Live site, built and hosted on GitHub Pages</small>
+              <span class="go">View portfolio →</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qtitle"><span class="qnum">7</span><span>Role-specific question:</span></div>
+      <div class="a">
+        <h3 class="block">For Head of Second Space &amp; AARMY Thailand:</h3>
+        <p class="muted">If class utilization and customer retention are below target, what would you analyze first and what actions would you take?</p>
+        <p>Churn / Cohort Analysis &mdash; Call or meet to ask &mdash; really works from experience &mdash; why quit &mdash; have better goals? Can we offer barter coupons (personalized offer to retain) to retain (P&amp;L has to be done first). My point is step 1: direct conversation / tone should be semi-casual to know why customer is quitting step 2: personalized offer to retain based on customer LTV</p>
+
+        <h3 class="block">For Head of Absolute Pluz Premium Protein:</h3>
+        <p class="muted">If social content gets engagement but sales conversion is low, what would you analyze first and what actions would you take?</p>
+        <p>Good content draws attention to the account &ndash; increases awareness but not really make people want to buy? I&rsquo;d rather make content with good-looking micro-to-medium rate influencers and run a campaign. How they got fit? Protein. &ndash; can be funny but also focus on the product in all seriousness or can just sell it as a shirtless muscular type content. (a bit not classy but conversion is the goal right? + specific coupon code for influencers with followers above 50K) (This is just a brainstorming strategy na krub apologies if it&rsquo;s not that deep)</p>
+      </div>
+    </div>
+
+    <div class="q">
+      <div class="qtitle"><span class="qnum">8</span><span>Please share your expected compensation and notice period.</span></div>
+      <div class="a">
+        <p>1 Week Notice Period</p>
+        <p>Expected compensation &ndash; Please make your offer first if all goes well and we are a good match na krub We can discuss later krub.</p>
+        <p>Before I got laid off at foodpanda &mdash; I more than doubled their Ads revenue and retained portfolio gross food value at 100 million baht. I was compensated approx 135&ndash;140K.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>Pachara Don Stewart · <a href="https://pacharadon.github.io/" style="color:var(--accent-ink)">pacharadon.github.io</a> · press “Save as PDF” for a clean A4</footer>
+
+</body>
+</html>
