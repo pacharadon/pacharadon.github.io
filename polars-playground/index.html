@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Polars Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            violetShell: "#1a1218",
+            violetPanel: "#241921",
+            violetSoft: "#2f2029",
+            violetLine: "#46303c",
+            violetInk: "#f5e6ee",
+            violetMuted: "#b899a9",
+            violetMain: "#f472b6"
+          },
+          boxShadow: {
+            soft: "0 18px 44px rgba(244, 114, 182, .18)"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html, body, #root { height: 100%; }
+    body {
+      margin: 0;
+      background: #1a1218;
+      color: #f5e6ee;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    textarea, pre, code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    * { scrollbar-width: thin; scrollbar-color: #f472b6 #2f2029; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #2f2029; }
+    ::-webkit-scrollbar-thumb { background: #f472b6; border-radius: 999px; border: 2px solid #2f2029; }
+    .focus-ring:focus-visible { outline: 2px solid #f472b6; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const STORAGE_KEY = "polars_playground_locked_v1";
+
+    const datasets = {
+      rocketDict: {
+        title: "Rocket launch dictionary",
+        note: "The first step is deliberately humble: a normal Python dict becomes a Polars DataFrame.",
+        rows: [
+          { mission: "Luna Shop", channel: "Shopify", revenue_usd: 4200, launch_success: true },
+          { mission: "CowSat", channel: "Amazon", revenue_usd: 3150, launch_success: true },
+          { mission: "Uber Orbit", channel: "Uber", revenue_usd: 2680, launch_success: false }
+        ]
+      },
+      commerce: {
+        title: "Worldwide commerce orders",
+        note: "Shopify, Amazon, direct storefronts, and marketplace orders in one compact table.",
+        rows: [
+          { order_id: "ORD-1001", channel: "Shopify", category: "Rocket Kits", revenue_usd: 4200, discount_usd: 250, status: "delivered" },
+          { order_id: "ORD-1002", channel: "Amazon", category: "Gadgets", revenue_usd: 3150, discount_usd: 120, status: "paid" },
+          { order_id: "ORD-1003", channel: "Direct", category: "Farm Gear", revenue_usd: 980, discount_usd: 40, status: "delivered" },
+          { order_id: "ORD-1004", channel: "Marketplace", category: "Cow Snacks", revenue_usd: 760, discount_usd: 0, status: "cancelled" },
+          { order_id: "ORD-1005", channel: "Shopify", category: "Rocket Kits", revenue_usd: 5100, discount_usd: 300, status: "delivered" }
+        ]
+      },
+      farm: {
+        title: "Farm sensor rows",
+        note: "Milk, feed, temperature, and cow health records. Serious data, slightly unserious setting.",
+        rows: [
+          { cow_id: "COW-01", farm: "Moon Meadow", milk_liters: 32, feed_kg: 18, health_score: 92 },
+          { cow_id: "COW-02", farm: "Moon Meadow", milk_liters: 27, feed_kg: 17, health_score: 88 },
+          { cow_id: "COW-03", farm: "Rocket Ranch", milk_liters: 35, feed_kg: 19, health_score: 95 },
+          { cow_id: "COW-04", farm: "Rocket Ranch", milk_liters: 22, feed_kg: 16, health_score: 81 }
+        ]
+      },
+      uber: {
+        title: "Uber-style trips",
+        note: "City rides, distance, fares, ratings, and pickup channels.",
+        rows: [
+          { trip_id: "UB-001", city: "Bangkok", km: 8.4, fare_usd: 12.5, rating: 4.9 },
+          { trip_id: "UB-002", city: "London", km: 4.1, fare_usd: 18.2, rating: 4.6 },
+          { trip_id: "UB-003", city: "New York", km: 12.7, fare_usd: 34.0, rating: 4.8 },
+          { trip_id: "UB-004", city: "Bangkok", km: 2.8, fare_usd: 5.4, rating: 4.7 }
+        ]
+      },
+      rockets: {
+        title: "Rocket telemetry",
+        note: "Mission outcome, payload, fuel, and launch-day signals.",
+        rows: [
+          { mission_id: "R-01", mission: "Luna Shop", payload_kg: 820, fuel_tons: 185, success: true },
+          { mission_id: "R-02", mission: "CowSat", payload_kg: 440, fuel_tons: 130, success: true },
+          { mission_id: "R-03", mission: "Uber Orbit", payload_kg: 610, fuel_tons: 160, success: false },
+          { mission_id: "R-04", mission: "Farm Beam", payload_kg: 300, fuel_tons: 118, success: true }
+        ]
+      }
+    };
+
+    const lessons = [
+      {
+        id: "L01",
+        dataset: "rocketDict",
+        phase: "Start",
+        title: "Build A DataFrame From A Dict",
+        short: "dict to frame",
+        prompt: "Create a Python dict called launch_data, turn it into a Polars DataFrame called launches, then print it.",
+        tutor: "Start with the smallest possible object. A dict gives Polars column names as keys and column values as lists.",
+        hints: ["Import polars as pl.", "Make each dict value a list of equal length.", "Use pl.DataFrame(launch_data)."],
+        checks: ["import polars as pl", "launch_data", "pl.dataframe", "launches", "print"],
+        expected: "A Polars DataFrame with mission, channel, revenue_usd, and launch_success.",
+        polarsAnswer: "import polars as pl\n\nlaunch_data = {\n    'mission': ['Luna Shop', 'CowSat', 'Uber Orbit'],\n    'channel': ['Shopify', 'Amazon', 'Uber'],\n    'revenue_usd': [4200, 3150, 2680],\n    'launch_success': [True, True, False]\n}\n\nlaunches = pl.DataFrame(launch_data)\nprint(launches)",
+        pandasSpoiler: "import pandas as pd\n\nlaunch_data = {\n    'mission': ['Luna Shop', 'CowSat', 'Uber Orbit'],\n    'channel': ['Shopify', 'Amazon', 'Uber'],\n    'revenue_usd': [4200, 3150, 2680],\n    'launch_success': [True, True, False]\n}\n\nlaunches = pd.DataFrame(launch_data)\nprint(launches)"
+      },
+      {
+        id: "L02",
+        dataset: "commerce",
+        phase: "Load",
+        title: "Load Orders From Rows",
+        short: "list of dicts",
+        prompt: "Create a Polars DataFrame called orders from marketplace_orders and print its shape.",
+        tutor: "Most real app data arrives as row-like records. Polars can turn a list of dicts into a DataFrame directly.",
+        hints: ["Use pl.DataFrame(marketplace_orders).", "Assign it to orders.", "Print orders.shape."],
+        checks: ["pl.dataframe", "marketplace_orders", "orders", "shape"],
+        expected: "The orders frame is created and shape is printed.",
+        polarsAnswer: "import polars as pl\n\norders = pl.DataFrame(marketplace_orders)\nprint(orders.shape)",
+        pandasSpoiler: "import pandas as pd\n\norders = pd.DataFrame(marketplace_orders)\nprint(orders.shape)"
+      },
+      {
+        id: "L03",
+        dataset: "commerce",
+        phase: "Inspect",
+        title: "Preview The Useful Columns",
+        short: "select",
+        prompt: "Select order_id, channel, category, and revenue_usd from orders.",
+        tutor: "A good analyst narrows the frame before thinking too hard. Select only the columns that answer the question.",
+        hints: ["Use orders.select([...]).", "Include revenue_usd.", "Print the selected result."],
+        checks: ["select", "order_id", "channel", "category", "revenue_usd"],
+        expected: "A compact order review table.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\nreview = orders.select(['order_id', 'channel', 'category', 'revenue_usd'])\nprint(review)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\nreview = orders[['order_id', 'channel', 'category', 'revenue_usd']]\nprint(review)"
+      },
+      {
+        id: "L04",
+        dataset: "commerce",
+        phase: "Filter",
+        title: "Keep Delivered Orders",
+        short: "filter",
+        prompt: "Filter orders so only delivered rows remain.",
+        tutor: "Polars filters read like business rules when you use pl.col clearly.",
+        hints: ["Use .filter(...).", "Use pl.col('status') == 'delivered'.", "Print delivered orders."],
+        checks: ["filter", "pl.col", "status", "delivered"],
+        expected: "Only delivered orders remain.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\ndelivered = orders.filter(pl.col('status') == 'delivered')\nprint(delivered)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\ndelivered = orders[orders['status'] == 'delivered']\nprint(delivered)"
+      },
+      {
+        id: "L05",
+        dataset: "commerce",
+        phase: "Sort",
+        title: "Rank Orders By Revenue",
+        short: "sort",
+        prompt: "Sort orders by revenue_usd from largest to smallest.",
+        tutor: "Sorting is the quickest way to see what deserves attention first.",
+        hints: ["Use .sort(...).", "Use descending=True.", "Sort revenue_usd."],
+        checks: ["sort", "revenue_usd", "descending=true"],
+        expected: "Orders ranked by highest revenue.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\nranked = orders.sort('revenue_usd', descending=True)\nprint(ranked)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\nranked = orders.sort_values('revenue_usd', ascending=False)\nprint(ranked)"
+      },
+      {
+        id: "L06",
+        dataset: "commerce",
+        phase: "Create",
+        title: "Calculate Net Revenue",
+        short: "with_columns",
+        prompt: "Create net_revenue_usd by subtracting discount_usd from revenue_usd.",
+        tutor: "In Polars, new columns usually come from expressions inside with_columns.",
+        hints: ["Use with_columns.", "Subtract discount_usd from revenue_usd.", "Alias as net_revenue_usd."],
+        checks: ["with_columns", "revenue_usd", "discount_usd", "alias('net_revenue_usd')"],
+        expected: "Orders now include net_revenue_usd.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\norders = orders.with_columns(\n    (pl.col('revenue_usd') - pl.col('discount_usd')).alias('net_revenue_usd')\n)\nprint(orders)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\norders['net_revenue_usd'] = orders['revenue_usd'] - orders['discount_usd']\nprint(orders)"
+      },
+      {
+        id: "L07",
+        dataset: "commerce",
+        phase: "Aggregate",
+        title: "Revenue By Channel",
+        short: "group_by",
+        prompt: "Group orders by channel and sum revenue_usd.",
+        tutor: "group_by changes the grain. You move from order rows to one row per channel.",
+        hints: ["Use group_by('channel').", "Use .agg(...).", "Sum revenue_usd."],
+        checks: ["group_by", "channel", "agg", "sum", "revenue_usd"],
+        expected: "One revenue row per channel.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\nchannel_revenue = orders.group_by('channel').agg(\n    pl.col('revenue_usd').sum().alias('total_revenue_usd')\n)\nprint(channel_revenue)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\nchannel_revenue = orders.groupby('channel', as_index=False)['revenue_usd'].sum()\nprint(channel_revenue)"
+      },
+      {
+        id: "L08",
+        dataset: "farm",
+        phase: "Farm",
+        title: "Milk By Farm",
+        short: "farm agg",
+        prompt: "Group farm rows by farm and calculate total milk_liters.",
+        tutor: "Same pattern, different world: commerce and farm data use the same analytical muscles.",
+        hints: ["Create cows from farm_rows.", "Group by farm.", "Sum milk_liters."],
+        checks: ["farm_rows", "group_by", "farm", "milk_liters", "sum"],
+        expected: "Total milk production per farm.",
+        polarsAnswer: "cows = pl.DataFrame(farm_rows)\n\nmilk = cows.group_by('farm').agg(\n    pl.col('milk_liters').sum().alias('total_milk_liters')\n)\nprint(milk)",
+        pandasSpoiler: "cows = pd.DataFrame(farm_rows)\n\nmilk = cows.groupby('farm', as_index=False)['milk_liters'].sum()\nprint(milk)"
+      },
+      {
+        id: "L09",
+        dataset: "farm",
+        phase: "Farm",
+        title: "Find Healthy High Producers",
+        short: "two filters",
+        prompt: "Keep cows with milk_liters >= 30 and health_score >= 90.",
+        tutor: "Multiple conditions need parentheses. Polars expressions combine cleanly with & and |.",
+        hints: ["Use filter.", "Use two pl.col comparisons.", "Join conditions with &."],
+        checks: ["filter", "milk_liters", "health_score", ">=", "&"],
+        expected: "Only high-producing healthy cow rows remain.",
+        polarsAnswer: "cows = pl.DataFrame(farm_rows)\n\nstars = cows.filter(\n    (pl.col('milk_liters') >= 30) & (pl.col('health_score') >= 90)\n)\nprint(stars)",
+        pandasSpoiler: "cows = pd.DataFrame(farm_rows)\n\nstars = cows[(cows['milk_liters'] >= 30) & (cows['health_score'] >= 90)]\nprint(stars)"
+      },
+      {
+        id: "L10",
+        dataset: "uber",
+        phase: "Rides",
+        title: "Fare Per Kilometer",
+        short: "unit metric",
+        prompt: "Create fare_per_km from fare_usd divided by km.",
+        tutor: "Unit metrics make rows comparable. Uber-style data is perfect for this habit.",
+        hints: ["Use with_columns.", "Divide fare_usd by km.", "Alias as fare_per_km."],
+        checks: ["with_columns", "fare_usd", "km", "alias('fare_per_km')"],
+        expected: "Trips include fare_per_km.",
+        polarsAnswer: "trips = pl.DataFrame(uber_trips)\n\ntrips = trips.with_columns(\n    (pl.col('fare_usd') / pl.col('km')).alias('fare_per_km')\n)\nprint(trips)",
+        pandasSpoiler: "trips = pd.DataFrame(uber_trips)\n\ntrips['fare_per_km'] = trips['fare_usd'] / trips['km']\nprint(trips)"
+      },
+      {
+        id: "L11",
+        dataset: "uber",
+        phase: "Rides",
+        title: "Trips By City",
+        short: "count",
+        prompt: "Count trips by city.",
+        tutor: "Counts are often the first metric in marketplace operations.",
+        hints: ["Use group_by('city').", "Count trip_id.", "Alias the count as trips."],
+        checks: ["group_by", "city", "trip_id", "count", "alias('trips')"],
+        expected: "One row per city with trip counts.",
+        polarsAnswer: "trips = pl.DataFrame(uber_trips)\n\ncity_counts = trips.group_by('city').agg(\n    pl.col('trip_id').count().alias('trips')\n)\nprint(city_counts)",
+        pandasSpoiler: "trips = pd.DataFrame(uber_trips)\n\ncity_counts = trips.groupby('city', as_index=False)['trip_id'].count().rename(columns={'trip_id': 'trips'})\nprint(city_counts)"
+      },
+      {
+        id: "L12",
+        dataset: "rockets",
+        phase: "Rockets",
+        title: "Fuel Per Payload",
+        short: "ratio",
+        prompt: "Create fuel_per_payload from fuel_tons divided by payload_kg.",
+        tutor: "Rocket rows are great for ratios. Ratios turn raw engineering numbers into comparable signals.",
+        hints: ["Use with_columns.", "Divide fuel_tons by payload_kg.", "Alias as fuel_per_payload."],
+        checks: ["with_columns", "fuel_tons", "payload_kg", "alias('fuel_per_payload')"],
+        expected: "Rocket missions include fuel_per_payload.",
+        polarsAnswer: "rockets = pl.DataFrame(rocket_rows)\n\nrockets = rockets.with_columns(\n    (pl.col('fuel_tons') / pl.col('payload_kg')).alias('fuel_per_payload')\n)\nprint(rockets)",
+        pandasSpoiler: "rockets = pd.DataFrame(rocket_rows)\n\nrockets['fuel_per_payload'] = rockets['fuel_tons'] / rockets['payload_kg']\nprint(rockets)"
+      },
+      {
+        id: "L13",
+        dataset: "rockets",
+        phase: "Rockets",
+        title: "Successful Missions Only",
+        short: "bool filter",
+        prompt: "Filter rocket rows to successful missions only.",
+        tutor: "Boolean columns do not need equality if the column already stores True/False.",
+        hints: ["Use filter.", "Use pl.col('success').", "Print successful missions."],
+        checks: ["filter", "pl.col", "success"],
+        expected: "Only successful rocket missions remain.",
+        polarsAnswer: "rockets = pl.DataFrame(rocket_rows)\n\nsuccessful = rockets.filter(pl.col('success'))\nprint(successful)",
+        pandasSpoiler: "rockets = pd.DataFrame(rocket_rows)\n\nsuccessful = rockets[rockets['success']]\nprint(successful)"
+      },
+      {
+        id: "L14",
+        dataset: "commerce",
+        phase: "Text",
+        title: "Uppercase Channels",
+        short: "strings",
+        prompt: "Create channel_upper with uppercase channel names.",
+        tutor: "String transforms are normal data cleaning. In Polars they live under .str.",
+        hints: ["Use with_columns.", "Use pl.col('channel').str.to_uppercase().", "Alias as channel_upper."],
+        checks: ["with_columns", "channel", "str.to_uppercase", "alias('channel_upper')"],
+        expected: "A new uppercase channel column.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\norders = orders.with_columns(\n    pl.col('channel').str.to_uppercase().alias('channel_upper')\n)\nprint(orders)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\norders['channel_upper'] = orders['channel'].str.upper()\nprint(orders)"
+      },
+      {
+        id: "L15",
+        dataset: "commerce",
+        phase: "Time",
+        title: "Extract Order Day",
+        short: "dates",
+        prompt: "Convert ordered_at to datetime and create order_day.",
+        tutor: "Dates unlock weekly trends, cohorts, delays, and all the sneaky useful stuff.",
+        hints: ["Use str.strptime.", "Use .dt.date().", "Alias as order_day."],
+        checks: ["str.strptime", "ordered_at", "dt.date", "alias('order_day')"],
+        expected: "Orders include an order_day column.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\norders = orders.with_columns(\n    pl.col('ordered_at').str.strptime(pl.Datetime, '%Y-%m-%d %H:%M').dt.date().alias('order_day')\n)\nprint(orders)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\norders['ordered_at'] = pd.to_datetime(orders['ordered_at'])\norders['order_day'] = orders['ordered_at'].dt.date\nprint(orders)"
+      },
+      {
+        id: "L16",
+        dataset: "commerce",
+        phase: "Join",
+        title: "Join Orders To Channels",
+        short: "join",
+        prompt: "Join orders to channel_rows on shop_id with a left join.",
+        tutor: "Joins are where analysts earn trust. Name the key and preserve the grain.",
+        hints: ["Create orders and channels DataFrames.", "Use .join(...).", "Use how='left'."],
+        checks: ["join", "shop_id", "how='left'", "channel_rows"],
+        expected: "Every order gains channel metadata.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\nchannels = pl.DataFrame(channel_rows)\n\njoined = orders.join(channels, on='shop_id', how='left')\nprint(joined)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\nchannels = pd.DataFrame(channel_rows)\n\njoined = orders.merge(channels, on='shop_id', how='left')\nprint(joined)"
+      },
+      {
+        id: "L17",
+        dataset: "commerce",
+        phase: "Clean",
+        title: "Fill Missing Discounts",
+        short: "fill_null",
+        prompt: "Fill null discount_usd values with 0.",
+        tutor: "Missing discounts should not break revenue math. Decide a rule, then make it explicit.",
+        hints: ["Use with_columns.", "Use fill_null(0).", "Target discount_usd."],
+        checks: ["with_columns", "discount_usd", "fill_null(0)"],
+        expected: "discount_usd has no null values.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\norders = orders.with_columns(\n    pl.col('discount_usd').fill_null(0)\n)\nprint(orders)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\norders['discount_usd'] = orders['discount_usd'].fillna(0)\nprint(orders)"
+      },
+      {
+        id: "L18",
+        dataset: "uber",
+        phase: "Rank",
+        title: "Rank Trips Within City",
+        short: "window",
+        prompt: "Create city_fare_rank by ranking fare_usd within each city.",
+        tutor: "Window expressions let you compare rows inside a group without collapsing the table.",
+        hints: ["Use rank.", "Use over('city').", "Alias as city_fare_rank."],
+        checks: ["rank", "fare_usd", "over('city')", "alias('city_fare_rank')"],
+        expected: "Each trip has a fare rank within its city.",
+        polarsAnswer: "trips = pl.DataFrame(uber_trips)\n\ntrips = trips.with_columns(\n    pl.col('fare_usd').rank(descending=True).over('city').alias('city_fare_rank')\n)\nprint(trips)",
+        pandasSpoiler: "trips = pd.DataFrame(uber_trips)\n\ntrips['city_fare_rank'] = trips.groupby('city')['fare_usd'].rank(ascending=False)\nprint(trips)"
+      },
+      {
+        id: "L19",
+        dataset: "farm",
+        phase: "Summary",
+        title: "Multi-Metric Farm Summary",
+        short: "multi agg",
+        prompt: "For each farm, calculate average health_score and total milk_liters.",
+        tutor: "One group_by can produce several metrics. This is how dashboards start.",
+        hints: ["Use group_by('farm').", "Use mean for health_score.", "Use sum for milk_liters."],
+        checks: ["group_by", "farm", "mean", "health_score", "sum", "milk_liters"],
+        expected: "Farm-level health and milk summary.",
+        polarsAnswer: "cows = pl.DataFrame(farm_rows)\n\nsummary = cows.group_by('farm').agg(\n    pl.col('health_score').mean().alias('avg_health_score'),\n    pl.col('milk_liters').sum().alias('total_milk_liters')\n)\nprint(summary)",
+        pandasSpoiler: "cows = pd.DataFrame(farm_rows)\n\nsummary = cows.groupby('farm', as_index=False).agg(\n    avg_health_score=('health_score', 'mean'),\n    total_milk_liters=('milk_liters', 'sum')\n)\nprint(summary)"
+      },
+      {
+        id: "L20",
+        dataset: "commerce",
+        phase: "Capstone",
+        title: "Launch-Day Commerce Readout",
+        short: "capstone",
+        prompt: "Create net_revenue_usd, keep delivered orders, group by channel, sum net revenue, and sort descending.",
+        tutor: "This is the whole loop: create a metric, filter to the right business state, aggregate, rank, and explain.",
+        hints: ["Use with_columns first.", "Filter delivered.", "Group by channel and sort the result."],
+        checks: ["with_columns", "net_revenue_usd", "filter", "delivered", "group_by", "channel", "sort"],
+        expected: "Delivered net revenue by channel, ranked highest first.",
+        polarsAnswer: "orders = pl.DataFrame(marketplace_orders)\n\nreadout = (\n    orders\n    .with_columns((pl.col('revenue_usd') - pl.col('discount_usd')).alias('net_revenue_usd'))\n    .filter(pl.col('status') == 'delivered')\n    .group_by('channel')\n    .agg(pl.col('net_revenue_usd').sum().alias('delivered_net_revenue_usd'))\n    .sort('delivered_net_revenue_usd', descending=True)\n)\nprint(readout)",
+        pandasSpoiler: "orders = pd.DataFrame(marketplace_orders)\n\norders['net_revenue_usd'] = orders['revenue_usd'] - orders['discount_usd']\nreadout = (\n    orders[orders['status'] == 'delivered']\n    .groupby('channel', as_index=False)['net_revenue_usd']\n    .sum()\n    .rename(columns={'net_revenue_usd': 'delivered_net_revenue_usd'})\n    .sort_values('delivered_net_revenue_usd', ascending=False)\n)\nprint(readout)"
+      }
+    ];
+
+    function normalize(value) {
+      return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+    }
+
+    function initialProgress() {
+      return {
+        activeLessonId: lessons[0].id,
+        completed: {},
+        submissions: {},
+        showPandas: {}
+      };
+    }
+
+    function loadProgress() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? { ...initialProgress(), ...JSON.parse(raw) } : initialProgress();
+      } catch {
+        return initialProgress();
+      }
+    }
+
+    function App() {
+      const [progress, setProgress] = React.useState(loadProgress);
+      const [codeByLesson, setCodeByLesson] = React.useState(() => {
+        const saved = loadProgress();
+        return Object.fromEntries(lessons.map(lesson => [lesson.id, saved.submissions?.[lesson.id]?.code || ""]));
+      });
+      const [outputByLesson, setOutputByLesson] = React.useState({});
+      const [hintIndex, setHintIndex] = React.useState(0);
+
+      React.useEffect(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+      }, [progress]);
+
+      const activeLesson = lessons.find(lesson => lesson.id === progress.activeLessonId) || lessons[0];
+      const activeIndex = lessons.findIndex(lesson => lesson.id === activeLesson.id);
+      const firstIncompleteIndex = lessons.findIndex(lesson => !progress.completed[lesson.id]);
+      const lockIndex = firstIncompleteIndex === -1 ? lessons.length - 1 : firstIncompleteIndex;
+      const completedCount = lessons.filter(lesson => progress.completed[lesson.id]).length;
+      const percent = Math.round((completedCount / lessons.length) * 100);
+      const code = codeByLesson[activeLesson.id] ?? "";
+      const output = outputByLesson[activeLesson.id] || progress.submissions?.[activeLesson.id]?.output || "Run your Polars code to get feedback.";
+      const currentPassed = Boolean(progress.completed[activeLesson.id]);
+      const nextLocked = activeIndex < lessons.length - 1 && !currentPassed;
+      const dataset = datasets[activeLesson.dataset];
+
+      function lessonUnlocked(lesson) {
+        return lessons.findIndex(item => item.id === lesson.id) <= lockIndex;
+      }
+
+      function selectLesson(lesson) {
+        if (!lessonUnlocked(lesson)) {
+          setOutputByLesson(prev => ({ ...prev, [activeLesson.id]: "Locked. Pass this lesson before jumping ahead." }));
+          return;
+        }
+        setProgress(prev => ({ ...prev, activeLessonId: lesson.id }));
+        setHintIndex(0);
+      }
+
+      function runLesson() {
+        const text = normalize(code);
+        const missing = activeLesson.checks.filter(check => !text.includes(normalize(check)));
+        const passed = missing.length === 0;
+        const result = [
+          passed ? "Passed. Nice, unlock granted." : "Not yet.",
+          "",
+          passed ? activeLesson.expected : "Still missing: " + missing.join(", "),
+          "",
+          "This checker looks for the Polars patterns the lesson is teaching."
+        ].join("\n");
+
+        setOutputByLesson(prev => ({ ...prev, [activeLesson.id]: result }));
+        setProgress(prev => ({
+          ...prev,
+          completed: { ...prev.completed, [activeLesson.id]: passed || prev.completed[activeLesson.id] },
+          submissions: {
+            ...prev.submissions,
+            [activeLesson.id]: {
+              code,
+              output: result,
+              passed,
+              submittedAt: new Date().toISOString()
+            }
+          }
+        }));
+      }
+
+      function nextLesson() {
+        if (nextLocked) {
+          setOutputByLesson(prev => ({ ...prev, [activeLesson.id]: "No skipping. Pass this lesson first, then Next unlocks." }));
+          return;
+        }
+        const next = lessons[Math.min(activeIndex + 1, lessons.length - 1)];
+        selectLesson(next);
+      }
+
+      function showPolarsAnswer() {
+        setCodeByLesson(prev => ({ ...prev, [activeLesson.id]: activeLesson.polarsAnswer }));
+        setOutputByLesson(prev => ({ ...prev, [activeLesson.id]: "Polars answer placed in the editor. Run it to pass." }));
+      }
+
+      function spoilPandas() {
+        setProgress(prev => ({
+          ...prev,
+          showPandas: { ...prev.showPandas, [activeLesson.id]: !prev.showPandas?.[activeLesson.id] }
+        }));
+      }
+
+      function resetCurrent() {
+        setCodeByLesson(prev => ({ ...prev, [activeLesson.id]: "" }));
+        setOutputByLesson(prev => ({ ...prev, [activeLesson.id]: "Editor cleared." }));
+      }
+
+      function resetAll() {
+        const fresh = initialProgress();
+        setProgress(fresh);
+        setCodeByLesson(Object.fromEntries(lessons.map(lesson => [lesson.id, ""])));
+        setOutputByLesson({});
+        setHintIndex(0);
+      }
+
+      return (
+        <div className="h-full bg-violetShell text-violetInk">
+          <div className="flex h-full min-h-0">
+            <aside className="hidden w-[360px] shrink-0 border-r border-violetLine bg-violetPanel/90 p-4 lg:flex lg:flex-col">
+              <div className="mb-4">
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-violetMain">Polars Playground</div>
+                <h1 className="mt-2 text-xl font-semibold tracking-tight">20-question data course</h1>
+                <p className="mt-2 text-sm leading-6 text-violetMuted">Rockets, Shopify, Amazon, Uber, farms, and cows. Main path is pure Polars.</p>
+              </div>
+
+              <div className="rounded-lg border border-violetLine bg-violetSoft/60 p-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-violetMuted">Progress</span>
+                  <span className="font-semibold">{completedCount}/{lessons.length}</span>
+                </div>
+                <div className="mt-3 h-2 rounded-full bg-violetSoft">
+                  <div className="h-2 rounded-full bg-violetMain transition-all" style={{ width: `${percent}%` }}></div>
+                </div>
+                <div className="mt-2 text-xs text-violetMuted">{percent}% complete</div>
+              </div>
+
+              <TutorPanel lesson={activeLesson} hint={activeLesson.hints[hintIndex]} onNextHint={() => setHintIndex(index => (index + 1) % activeLesson.hints.length)} />
+
+              <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+                <div className="space-y-2">
+                  {lessons.map((lesson, index) => {
+                    const active = lesson.id === activeLesson.id;
+                    const done = progress.completed[lesson.id];
+                    const unlocked = lessonUnlocked(lesson);
+                    return (
+                      <button
+                        key={lesson.id}
+                        onClick={() => selectLesson(lesson)}
+                        aria-disabled={!unlocked}
+                        className={`focus-ring w-full rounded-lg border p-3 text-left transition ${
+                          active ? "border-violetMain bg-violetMain text-[#2b121f] shadow-soft" : unlocked ? "border-violetLine bg-violetPanel hover:bg-violetSoft" : "cursor-not-allowed border-violetLine bg-violetPanel/60 text-violetMuted opacity-60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${active ? "text-[#2b121f]/70" : "text-violetMuted"}`}>{lesson.phase}</span>
+                          <span className={`rounded px-2 py-0.5 text-[11px] ${done ? "bg-emerald-400/15 text-emerald-300" : active ? "bg-[#2b121f]/15 text-[#2b121f]" : "bg-violetSoft text-violetMuted"}`}>
+                            {done ? "Done" : unlocked ? String(index + 1).padStart(2, "0") : "Lock"}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold leading-5">{lesson.title}</div>
+                        <div className={`mt-1 text-xs ${active ? "text-[#2b121f]/70" : "text-violetMuted"}`}>{lesson.short}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button onClick={resetAll} className="focus-ring mt-4 rounded-lg border border-violetLine px-3 py-2 text-sm text-violetMuted transition hover:bg-violetSoft">Reset progress</button>
+            </aside>
+
+            <main className="flex min-w-0 flex-1 flex-col">
+              <header className="flex h-16 shrink-0 items-center justify-between border-b border-violetLine bg-violetPanel/90 px-4 md:px-6">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-violetMuted">
+                    <span>{activeLesson.phase}</span>
+                    <span className="h-1 w-1 rounded-full bg-violetLine"></span>
+                    <span>Polars lesson {activeIndex + 1} of {lessons.length}</span>
+                  </div>
+                  <div className="truncate text-base font-semibold md:text-lg">{activeLesson.title}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={resetCurrent} className="focus-ring hidden rounded-lg border border-violetLine px-3 py-2 text-sm text-violetMuted transition hover:bg-violetSoft sm:inline-flex">Clear</button>
+                  <button onClick={nextLesson} aria-disabled={nextLocked} className={`focus-ring rounded-lg border border-violetLine px-3 py-2 text-sm transition ${nextLocked ? "cursor-not-allowed text-violetMuted opacity-60" : "text-violetInk hover:bg-violetSoft"}`}>Next</button>
+                </div>
+              </header>
+
+              <div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[minmax(360px,0.9fr)_minmax(560px,1.1fr)]">
+                <section className="min-h-0 overflow-y-auto border-b border-violetLine bg-violetShell p-4 md:p-6 xl:border-b-0 xl:border-r">
+                  <div className="rounded-lg border border-violetLine bg-violetPanel p-4 shadow-soft">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-violetMain">Challenge</div>
+                        <h2 className="mt-2 text-2xl font-semibold tracking-tight">{activeLesson.short}</h2>
+                      </div>
+                      <div className="rounded-lg border border-violetLine bg-violetSoft px-3 py-2 text-right">
+                        <div className="text-xs text-violetMuted">Unlock</div>
+                        <div className="text-sm font-semibold">{currentPassed ? "Passed" : "Locked"}</div>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-sm leading-6 text-violetInk">{activeLesson.prompt}</p>
+                  </div>
+
+                  <div className="mt-4 rounded-lg border border-violetLine bg-violetPanel p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold">{dataset.title}</h3>
+                        <p className="mt-1 text-xs leading-5 text-violetMuted">{dataset.note}</p>
+                      </div>
+                      <span className="rounded-md bg-violetSoft px-2 py-1 text-xs text-violetMuted">{activeLesson.dataset}</span>
+                    </div>
+                    <pre className="mt-4 max-h-64 overflow-auto rounded-lg border border-violetLine bg-violetShell p-3 text-xs leading-5 text-violetInk">{JSON.stringify(dataset.rows, null, 2)}</pre>
+                  </div>
+                </section>
+
+                <section className="flex min-h-0 flex-col bg-violetPanel">
+                  <div className="flex shrink-0 items-center justify-between border-b border-violetLine px-4 py-3">
+                    <div>
+                      <div className="text-sm font-semibold">Polars editor</div>
+                      <div className="text-xs text-violetMuted">Blank by default. No pandas in the input unless you click the spoiler.</div>
+                    </div>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <button onClick={showPolarsAnswer} className="focus-ring rounded-lg border border-violetLine px-3 py-2 text-sm text-violetInk transition hover:bg-violetSoft">Show Polars answer</button>
+                      <button onClick={spoilPandas} className="focus-ring rounded-lg border border-violetLine px-3 py-2 text-sm text-violetInk transition hover:bg-violetSoft">Spoil pandas version</button>
+                      <button onClick={runLesson} className="focus-ring rounded-lg bg-violetMain px-4 py-2 text-sm font-semibold text-[#2b121f] transition hover:bg-[#ec4899]">Run</button>
+                    </div>
+                  </div>
+
+                  <div className="min-h-0 flex-1 p-4">
+                    <textarea
+                      value={code}
+                      onChange={event => setCodeByLesson(prev => ({ ...prev, [activeLesson.id]: event.target.value }))}
+                      spellCheck="false"
+                      placeholder="Write Polars code here."
+                      className="focus-ring h-full min-h-[320px] w-full resize-none rounded-lg border border-violetLine bg-violetShell p-4 text-[14px] leading-6 text-violetInk shadow-inner outline-none placeholder:text-violetMuted/60"
+                    />
+                  </div>
+
+                  <div className="grid shrink-0 grid-cols-1 border-t border-violetLine md:grid-cols-2">
+                    <OutputPanel text={output} passed={progress.submissions?.[activeLesson.id]?.passed} />
+                    <div className="border-t border-violetLine p-4 md:border-l md:border-t-0">
+                      <div className="text-sm font-semibold">Pandas spoiler</div>
+                      {progress.showPandas?.[activeLesson.id] ? (
+                        <pre className="mt-3 h-40 overflow-auto whitespace-pre-wrap rounded-lg border border-violetLine bg-violetShell p-3 text-xs leading-5 text-violetInk">{activeLesson.pandasSpoiler}</pre>
+                      ) : (
+                        <div className="mt-3 h-40 rounded-lg border border-dashed border-violetLine bg-violetShell p-3 text-sm leading-6 text-violetMuted">Hidden. Click “Spoil pandas version” only when you want the comparison.</div>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    function TutorPanel({ lesson, hint, onNextHint }) {
+      return (
+        <div className="mt-4 rounded-lg border border-violetLine bg-violetPanel p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-violetMain">Tutor</div>
+          <h3 className="mt-2 text-base font-semibold">What to notice</h3>
+          <p className="mt-2 text-sm leading-6 text-violetMuted">{lesson.tutor}</p>
+          <div className="mt-4 rounded-lg border border-violetLine bg-violetSoft/60 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-semibold">Hint</div>
+              <button onClick={onNextHint} className="focus-ring rounded-md border border-violetLine bg-violetSoft px-2 py-1 text-xs text-violetInk">Next hint</button>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-violetMuted">{hint}</p>
+          </div>
+          <div className="mt-4 text-xs leading-5 text-violetMuted">Pass rule: the checker looks for the required Polars patterns. You cannot unlock the next lesson until this one passes.</div>
+        </div>
+      );
+    }
+
+    function OutputPanel({ text, passed }) {
+      return (
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-semibold">Output</div>
+            <span className={`rounded-md px-2 py-1 text-xs ${
+              passed === true ? "bg-emerald-400/15 text-emerald-300" : passed === false ? "bg-amber-400/15 text-amber-300" : "bg-violetSoft text-violetMuted"
+            }`}>
+              {passed === true ? "Passed" : passed === false ? "Needs work" : "Ready"}
+            </span>
+          </div>
+          <pre className="mt-3 h-40 overflow-auto whitespace-pre-wrap rounded-lg border border-violetLine bg-violetShell p-3 text-xs leading-5 text-violetInk">{text}</pre>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
